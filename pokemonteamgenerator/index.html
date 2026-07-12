@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Pokémon Team Generator</title>
+	<link rel="stylesheet" href="css/style.css" type="text/css">
+	<style>
+		#main {
+			padding: 20px;
+		}
+		#poke-btn {
+			margin: 10px 0 20px;
+		}
+		#poke-result {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 20px;
+			padding: 10px;
+		}
+		.poke-card {
+			text-align: center;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 10px;
+		}
+		.poke-card img {
+			width: 96px;
+			height: 96px;
+		}
+		.poke-card h4 {
+			text-transform: capitalize;
+			margin: 5px 0 0;
+		}
+	</style>
+</head>
+<body>
+	<div id="page">
+		<div id="header">
+			<div class="background">
+				<h1 id="logo"> <a href="index.html">Pokémon Team Generator</a> </h1>
+				<div id="navigation">
+					<ul>
+						<li class="selected">	
+							<a href="index.html">Home</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="contents">
+			<div id="adbox">
+				<div>
+					<img src="images/profoak.jpg" alt="Img" height="390" width="632">
+					<h1 id="greeting">Pokémon Team Generator</h1>
+					<h4>My name is Oak! People call me the Pokémon Professor! This world is inhabited by creatures called Pokémon!</h4>
+					<p>
+						For some people, Pokémon are pets. Others use them for fights. Myself... I study Pokémon as a profession. Well then, what are we waiting for? A world of dreams and adventures with Pokémon awaits! Let's go! 
+					</p>
+				</div>
+			</div>
+			<div id="main">
+			<h4>Random Pokémon</h4>
+			<p>Choose a category, then generate 6 random Pokémon.</p>
+
+			<div id="category-buttons">
+			<button class="cat-btn selected" data-category="free">Free pick</button>
+			<button class="cat-btn" data-category="mega">Megas only</button>
+			</div>
+
+	<button id="poke-btn">Get 6 random Pokémon</button>
+	<div id="poke-result"></div>
+</div>
+
+		</div>
+		<div id="footer">
+			<div class="background">
+				<div class="body">
+					<p id="footnote">
+					Kevin — 25229543 | Template by <a href="https://freewebsitetemplates.com/preview/helicoptertransportationwebtemplate/index.html" target="_blank">freewebsitetemplates.com</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+// Ask for the visitor's name and greet them
+let name = prompt("What's your name?");
+if (!name) name = "John";
+name = name.trim().slice(0, 12);
+document.getElementById("greeting").textContent = "Ah, " + name + "! " + "Welcome!";
+
+// Track which category is selected
+let selectedCategory = "free";
+
+document.querySelectorAll(".cat-btn").forEach(btn => {
+	btn.addEventListener("click", () => {
+		document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("selected"));
+		btn.classList.add("selected");
+		selectedCategory = btn.dataset.category;
+	});
+});
+
+// Hardcoded list of Mega Pokémon (PokeAPI has no built-in "mega" category)
+const megaList = [
+	"venusaur-mega", "charizard-mega-x", "charizard-mega-y", "blastoise-mega",
+	"alakazam-mega", "gengar-mega", "kangaskhan-mega", "pinsir-mega",
+	"gyarados-mega", "aerodactyl-mega", "mewtwo-mega-x", "mewtwo-mega-y",
+	"ampharos-mega", "scizor-mega", "heracross-mega", "houndoom-mega",
+	"tyranitar-mega", "sceptile-mega", "blaziken-mega", "swampert-mega",
+	"gardevoir-mega", "sableye-mega", "mawile-mega", "aggron-mega",
+	"medicham-mega", "manectric-mega", "sharpedo-mega", "camerupt-mega",
+	"altaria-mega", "banette-mega", "absol-mega", "glalie-mega",
+	"salamence-mega", "metagross-mega", "latias-mega", "latios-mega",
+	"rayquaza-mega", "lopunny-mega", "garchomp-mega", "lucario-mega",
+	"abomasnow-mega", "gallade-mega", "audino-mega", "diancie-mega",
+	"beedrill-mega", "pidgeot-mega", "slowbro-mega", "steelix-mega"
+];
+
+async function getSixPokemon(category) {
+	if (category === "mega") {
+		const shuffled = [...megaList].sort(() => Math.random() - 0.5);
+		const picks = shuffled.slice(0, 6);
+		const requests = picks.map(name =>
+			fetch(`https://pokeapi.co/api/v2/pokemon/${name}`).then(res => res.json())
+		);
+		return Promise.all(requests);
+	}
+
+	// Free pick
+	const usedIds = new Set();
+	while (usedIds.size < 6) {
+		usedIds.add(Math.floor(Math.random() * 1010) + 1);
+	}
+	const requests = [...usedIds].map(id =>
+		fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(res => res.json())
+	);
+	return Promise.all(requests);
+}
+
+document.getElementById("poke-btn").addEventListener("click", async () => {
+	const resultDiv = document.getElementById("poke-result");
+	resultDiv.innerHTML = "<p>Loading...</p>";
+
+	const pokemonList = await getSixPokemon(selectedCategory);
+
+	resultDiv.innerHTML = pokemonList.map(data => `
+		<div class="poke-card">
+			<img src="${data.sprites.front_default}" alt="${data.name}">
+			<h4>${data.name}</h4>
+		</div>
+	`).join("");
+});
+	</script>
+</body>
+</html>
